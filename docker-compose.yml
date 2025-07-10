@@ -5,30 +5,8 @@ services:
     container_name: openvpn-supereasy
     cap_add:
       - NET_ADMIN
-    environment:
-      - OPENVPN_EXTERNAL_HOSTNAME=www.oifdev.info
-      - OPENVPN_PORT_UDP=1194
-      - OPENVPN_PORT_TCP=1443  # Changé de 445 à 1443 (port sécurisé)
-      # - OPENVPN_DNS=94.140.14.14 1.1.1.1  # DNS secondaire pour redondance
-      - OPENVPN_DNS=8.8.8.8  # DNS secondaire pour redondance
-      # - OPENVPN_CLIENTS=hlabsPC hlabsPixel hlabsTablet sweetPixel hlabsHp halbsTest anonym0 anonym1 anonym2 anonym3 anonym4 anonym5 anonym6 anonym7 anonym8 anonym9 anonym10 anonym11 anonym12 anonym13 anonym14 anonym15 anonym16 anonym17 anonym18 anonym19
-      - OPENVPN_CLIENTS=hlabsPC hlabsPixel hlabsTablet sweetPixel hlabsHp halbsTest anonym0
-      - OPENVPN_PING=10
-      - OPENVPN_PING_RESTART=60
-      - OPENVPN_FASTIO=0
-      # Réseaux explicites pour éviter les conflits
-      - OPENVPN_NETWORK_UDP=10.8.0.0/24
-      - OPENVPN_NETWORK_TCP=10.9.0.0/24
-      # Chiffrement moderne et sécurisé
-      - OPENVPN_CIPHER=AES-256-GCM
-      # MTU optimisé pour éviter la fragmentation
-      - OPENVPN_TUN_MTU=1420  # Réduit de 1420 à 1280 pour plus de compatibilité
-      # MSS Fix activé pour gérer la fragmentation TCP
-      - OPENVPN_MSSFIX=1380   # Activé et optimisé (MTU - 40 pour headers)
-      - TZ=Africa/Abidjan
-      # Ajout d'options pour améliorer la stabilité
-      - OPENVPN_KEEPALIVE=10 60
-      - OPENVPN_COMP_LZO=adaptive  # Compression adaptative
+    env_file:
+      - .env.openvpn
     volumes:
       - ./server:/etc/openvpn/server
       - ./clients:/etc/openvpn/clients
