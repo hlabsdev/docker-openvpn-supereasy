@@ -23,8 +23,8 @@ fi
 
 # Sauvegarde des configurations actuelles
 echo "💾 Sauvegarde des configurations actuelles..."
-cp docker-compose.yml docker-compose.yml.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
-cp /etc/nginx/sites-enabled/oif /etc/nginx/sites-enabled/oif.backup.$(date +%Y%m%d_%H%M%S)
+cp docker-compose.yml backups/docker-compose.yml.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
+cp /etc/nginx/sites-enabled/oif /etc/nginx/old-configs/oif.backup.$(date +%Y%m%d_%H%M%S)
 
 # Arrêt du service OpenVPN
 echo "⏹️  Arrêt du service OpenVPN..."

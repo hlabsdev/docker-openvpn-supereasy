@@ -6,7 +6,7 @@
 set -e
 
 ENV_FILE=".env.openvpn"
-BACKUP_FILE="${ENV_FILE}.backup.$(date +%Y%m%d_%H%M%S)"
+BACKUP_FILE="./backups/${ENV_FILE}.backup.$(date +%Y%m%d_%H%M%S)"
 
 echo "🔧 Ajout de clients OpenVPN via fichier .env"
 echo "============================================"
