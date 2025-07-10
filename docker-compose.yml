@@ -1,0 +1,31 @@
+name: openvpn
+services:
+  openvpn-supereasy:
+    image: julman99/openvpn-supereasy
+    container_name: openvpn-supereasy
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - OPENVPN_EXTERNAL_HOSTNAME=www.oifdev.info
+      - OPENVPN_PORT_UDP=1194
+      - OPENVPN_PORT_TCP=445 # ⚠️ Changer le 445 si pas d'usage SMB spécifique
+      - OPENVPN_DNS=94.140.14.14
+      - OPENVPN_CLIENTS=hlabsPC hlabsPixel hlabsTablet sweetPixel hlabsHp halbsTest
+      - OPENVPN_PING=10
+      - OPENVPN_PING_RESTART=60
+      - OPENVPN_FASTIO=1
+      # Ne pas définir ces deux variables si tu veux les valeurs par défaut
+      # - OPENVPN_NETWORK_UDP=10.8.0.0/24
+      # - OPENVPN_NETWORK_TCP=10.9.0.0/24
+      # - OPENVPN_CIPHER=some.cipher #optional, one of AES-256-GCM, AES-128-GCM, AES-256-CBC or AES-128-CBC. If ommited OpenVPN tries to negotiate the most secure cipher supported by both server and client
+      # - OPENVPN_ROUTE_DEV=0 #optional, device to route traffic, this parameter is useful when running openvpn with host networking
+      - OPENVPN_TUN_MTU=1420
+      - OPENVPN_MSSFIX=1380
+      - TZ=Africa/Abidjan
+    volumes:
+      - ./server:/etc/openvpn/server
+      - ./clients:/etc/openvpn/clients
+    ports:
+      - 1194:1194/udp
+      - 445:445/tcp
+    restart: unless-stopped
