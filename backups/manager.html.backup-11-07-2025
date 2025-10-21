@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenVPN Manager - OIF</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: #3498db;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .status-item {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #3498db;
+        }
+
+        .status-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .status-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .command-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .command-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 15px;
+            font-family: 'Consolas', monospace;
+        }
+
+        .command-output {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 200px;
+            font-family: 'Consolas', monospace;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .live-logs {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 300px;
+            font-family: 'Consolas', monospace;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ OpenVPN Manager</h1>
+            <p>Interface de gestion en temps réel pour votre serveur OpenVPN</p>
+        </div>
+
+        <div class="dashboard">
+            <!-- Status du serveur -->
+            <div class="card">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,16.5L18,9.5L16.59,8.09L11,13.67L7.91,10.59L6.5,12L11,16.5Z"/>
+                    </svg>
+                    Status du Serveur
+                </h3>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-value" id="server-status">🟢</div>
+                        <div class="status-label">Serveur</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-value" id="connected-clients">-</div>
+                        <div class="status-label">Clients connectés</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-value" id="total-clients">-</div>
+                        <div class="status-label">Total clients</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-value" id="uptime">-</div>
+                        <div class="status-label">Uptime</div>
+                    </div>
+                </div>
+                <div class="action-buttons" style="margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="refreshStatus()">🔄 Actualiser</button>
+                    <button class="btn btn-success" onclick="showLogs()">📋 Voir les logs</button>
+                </div>
+            </div>
+
+            <!-- Gestion des clients -->
+            <div class="card">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+                    </svg>
+                    Gestion des Clients
+                </h3>
+                <div class="action-buttons">
+                    <button class="btn btn-success" onclick="showAddClient()">➕ Ajouter un client</button>
+                    <button class="btn btn-primary" onclick="listClients()">👥 Lister les clients</button>
+                    <button class="btn btn-warning" onclick="showRevokeClient()">🚫 Révoquer un client</button>
+                    <button class="btn btn-primary" onclick="downloadConfigs()">📥 Télécharger configs</button>
+                </div>
+            </div>
+
+            <!-- Monitoring -->
+            <div class="card">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z"/>
+                    </svg>
+                    Monitoring
+                </h3>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="showBandwidth()">📊 Bande passante</button>
+                    <button class="btn btn-primary" onclick="showConnections()">🔗 Connexions actives</button>
+                    <button class="btn btn-warning" onclick="showResources()">💻 Ressources système</button>
+                </div>
+            </div>
+
+            <!-- Actions rapides -->
+            <div class="card">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,16.5L18,9.5L16.59,8.09L11,13.67L7.91,10.59L6.5,12L11,16.5Z"/>
+                    </svg>
+                    Actions Rapides
+                </h3>
+                <div class="action-buttons">
+                    <button class="btn btn-warning" onclick="reloadConfig()">⚙️ Recharger config</button>
+                    <button class="btn btn-danger" onclick="disconnectAll()">🔌 Déconnecter tous</button>
+                    <button class="btn btn-primary" onclick="backupConfigs()">💾 Sauvegarder</button>
+                    <button class="btn btn-success" onclick="testConnectivity()">🔍 Test connectivité</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terminal de commandes -->
+        <div class="command-section">
+            <h3>Terminal de Commandes</h3>
+            <input type="text" class="command-input" id="command-input" placeholder="Tapez votre commande Docker ici... (ex: docker-compose exec openvpn-supereasy bash -c 'commande')" onkeypress="handleCommand(event)">
+            <button class="btn btn-primary" onclick="executeCommand()">Exécuter</button>
+            <div class="command-output" id="command-output">Prêt pour les commandes...\n</div>
+        </div>
+
+        <!-- Logs en temps réel -->
+        <div class="command-section">
+            <h3>Logs en Temps Réel</h3>
+            <button class="btn btn-success" onclick="startLiveLogs()">▶️ Démarrer</button>
+            <button class="btn btn-danger" onclick="stopLiveLogs()">⏹️ Arrêter</button>
+            <button class="btn btn-warning" onclick="clearLogs()">🗑️ Effacer</button>
+            <div class="live-logs" id="live-logs">Logs en attente...\n</div>
+        </div>
+    </div>
+
+    <script>
+        let logsInterval;
+        let commandHistory = [];
+        let historyIndex = -1;
+
+        // Gestion des commandes
+        function handleCommand(event) {
+            if (event.key === 'Enter') {
+                executeCommand();
+            } else if (event.key === 'ArrowUp') {
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    document.getElementById('command-input').value = commandHistory[commandHistory.length - 1 - historyIndex];
+                }
+            } else if (event.key === 'ArrowDown') {
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    document.getElementById('command-input').value = commandHistory[commandHistory.length - 1 - historyIndex];
+                } else {
+                    historyIndex = -1;
+                    document.getElementById('command-input').value = '';
+                }
+            }
+        }
+
+        function executeCommand() {
+            const command = document.getElementById('command-input').value.trim();
+            if (!command) return;
+
+            commandHistory.push(command);
+            historyIndex = -1;
+
+            const output = document.getElementById('command-output');
+            output.textContent += `$ ${command}\n`;
+            
+            // Simulation d'exécution (à remplacer par un appel API réel)
+            setTimeout(() => {
+                output.textContent += `Commande exécutée: ${command}\n`;
+                output.textContent += `Résultat simulé...\n\n`;
+                output.scrollTop = output.scrollHeight;
+            }, 500);
+
+            document.getElementById('command-input').value = '';
+        }
+
+        // Actions des boutons
+        function refreshStatus() {
+            addLog('🔄 Actualisation du status...');
+            // Simulation - à remplacer par des appels API réels
+            setTimeout(() => {
+                document.getElementById('connected-clients').textContent = Math.floor(Math.random() * 10);
+                document.getElementById('total-clients').textContent = '20';
+                document.getElementById('uptime').textContent = '2d 5h';
+                addLog('✅ Status actualisé');
+            }, 1000);
+        }
+
+        function showAddClient() {
+            const clientName = prompt('Nom du nouveau client:');
+            if (clientName) {
+                addLog(`➕ Création du client: ${clientName}`);
+                // Simulation d'ajout
+                setTimeout(() => {
+                    addLog(`✅ Client ${clientName} créé avec succès`);
+                }, 2000);
+            }
+        }
+
+        function listClients() {
+            addLog('👥 Récupération de la liste des clients...');
+            setTimeout(() => {
+                const clients = ['hlabsPC', 'hlabsPixel', 'hlabsTablet', 'sweetPixel', 'hlabsHp'];
+                addLog('📋 Clients configurés:');
+                clients.forEach(client => addLog(`  - ${client}`));
+            }, 1000);
+        }
+
+        function showRevokeClient() {
+            const clientName = prompt('Nom du client à révoquer:');
+            if (clientName) {
+                if (confirm(`Êtes-vous sûr de vouloir révoquer le client: ${clientName} ?`)) {
+                    addLog(`🚫 Révocation du client: ${clientName}`);
+                    setTimeout(() => {
+                        addLog(`✅ Client ${clientName} révoqué`);
+                    }, 2000);
+                }
+            }
+        }
+
+        function downloadConfigs() {
+            addLog('📥 Préparation des configurations...');
+            setTimeout(() => {
+                addLog('✅ Configurations prêtes: /vpn-configs/');
+            }, 1000);
+        }
+
+        function showBandwidth() {
+            addLog('📊 Analyse de la bande passante...');
+            setTimeout(() => {
+                addLog('📈 Trafic entrant: 45.2 MB/s');
+                addLog('📉 Trafic sortant: 23.8 MB/s');
+            }, 1500);
+        }
+
+        function showConnections() {
+            addLog('🔗 Connexions actives:');
+            setTimeout(() => {
+                addLog('  - hlabsPC: 10.8.0.2 (Actif)');
+                addLog('  - hlabsPixel: 10.8.0.3 (Actif)');
+                addLog('  - sweetPixel: 10.8.0.4 (Inactif)');
+            }, 1000);
+        }
+
+        function showResources() {
+            addLog('💻 Ressources système:');
+            setTimeout(() => {
+                addLog('  - CPU: 12%');
+                addLog('  - RAM: 256MB / 1GB');
+                addLog('  - Réseau: 2.3 MB/s');
+            }, 1000);
+        }
+
+        function reloadConfig() {
+            if (confirm('Recharger la configuration OpenVPN ?')) {
+                addLog('⚙️ Rechargement de la configuration...');
+                setTimeout(() => {
+                    addLog('✅ Configuration rechargée');
+                }, 2000);
+            }
+        }
+
+        function disconnectAll() {
+            if (confirm('Déconnecter tous les clients ?')) {
+                addLog('🔌 Déconnexion de tous les clients...');
+                setTimeout(() => {
+                    addLog('✅ Tous les clients déconnectés');
+                    document.getElementById('connected-clients').textContent = '0';
+                }, 1500);
+            }
+        }
+
+        function backupConfigs() {
+            addLog('💾 Sauvegarde des configurations...');
+            setTimeout(() => {
+                addLog('✅ Sauvegarde terminée: openvpn-backup-20250711.tar.gz');
+            }, 2000);
+        }
+
+        function testConnectivity() {
+            addLog('🔍 Test de connectivité...');
+            setTimeout(() => {
+                addLog('✅ Ping 8.8.8.8: 25ms');
+                addLog('✅ Ping 1.1.1.1: 18ms');
+                addLog('✅ Connectivité OK');
+            }, 1500);
+        }
+
+        function startLiveLogs() {
+            if (logsInterval) clearInterval(logsInterval);
+            
+            logsInterval = setInterval(() => {
+                const logs = document.getElementById('live-logs');
+                const timestamp = new Date().toLocaleTimeString();
+                const messages = [
+                    `[${timestamp}] OpenVPN: Client hlabsPC connected`,
+                    `[${timestamp}] OpenVPN: TUN/TAP device opened`,
+                    `[${timestamp}] OpenVPN: Peer Connection Initiated`,
+                    `[${timestamp}] OpenVPN: Sequence Completed`,
+                    `[${timestamp}] System: CPU usage: 12%`,
+                ];
+                
+                const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                logs.textContent += randomMessage + '\n';
+                logs.scrollTop = logs.scrollHeight;
+            }, 2000);
+            
+            addLog('▶️ Logs temps réel démarrés');
+        }
+
+        function stopLiveLogs() {
+            if (logsInterval) {
+                clearInterval(logsInterval);
+                logsInterval = null;
+                addLog('⏹️ Logs temps réel arrêtés');
+            }
+        }
+
+        function clearLogs() {
+            document.getElementById('live-logs').textContent = '';
+            addLog('🗑️ Logs effacés');
+        }
+
+        function addLog(message) {
+            const logs = document.getElementById('live-logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logs.textContent += `[${timestamp}] ${message}\n`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshStatus();
+            addLog('🚀 Interface OpenVPN Manager initialisée');
+        });
+    </script>
+</body>
+</html>

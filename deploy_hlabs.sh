@@ -24,7 +24,17 @@ fi
 # Sauvegarde des configurations actuelles
 echo "💾 Sauvegarde des configurations actuelles..."
 cp docker-compose.yml backups/docker-compose.yml.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
-cp /etc/nginx/sites-enabled/oif /etc/nginx/old-configs/oif.backup.$(date +%Y%m%d_%H%M%S)
+timestamp=$(date +%Y%m%d_%H%M%S)
+src="/etc/nginx/sites-enabled"
+dest="/etc/nginx/old-configs/backup.$timestamp"
+
+if [ -d "$src" ]; then
+    mkdir -p "$dest"
+    cp -a "$src/." "$dest/"
+    echo "💾 Copié $src -> $dest"
+else
+    echo "⚠️  Source $src introuvable, rien à sauvegarder"
+fi
 
 # Arrêt du service OpenVPN
 echo "⏹️  Arrêt du service OpenVPN..."

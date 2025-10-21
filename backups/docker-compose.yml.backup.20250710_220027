@@ -1,0 +1,57 @@
+name: openvpn
+services:
+
+# Service AdGuard Home pour la gestion DNS
+  adguardhome:
+    image: adguard/adguardhome
+    container_name: adguardhome
+    restart: unless-stopped
+    ports:
+      # - "53:53/tcp"   # DNS over TCP
+      # - "53:53/udp"   # DNS over UDP
+      - "5353:53/tcp"
+      - "5353:53/udp"
+      - "3000:3000/tcp" # Web UI pour l'administration (vous pouvez changer 3000:3000)
+      # Si vous voulez d'autres fonctionnalités comme DNS-over-HTTPS/TLS (pas essentiel pour le VPN)
+      # - "853:853/tcp"  # DNS-over-TLS
+      # - "443:443/tcp" # Attention: 443 est déjà pris par Nginx pour le stream, à éviter ici si Nginx est sur le même hôte
+    volumes:
+      - ./adguard/data:/opt/adguardhome/work
+      - ./adguard/conf:/opt/adguardhome/conf
+    networks:
+      - openvpn_network # Ajoutez ce réseau
+
+  # Service OpenVPN avec l'image julman99/openvpn-supereasy
+  openvpn-supereasy:
+    image: julman99/openvpn-supereasy
+    container_name: openvpn-supereasy
+    cap_add:
+      - NET_ADMIN
+    env_file:
+      - .env.openvpn
+    volumes:
+      - ./server:/etc/openvpn/server
+      - ./clients:/etc/openvpn/clients
+    ports:
+      - 1194:1194/udp
+      - 1443:1443/tcp  # Nouveau port TCP sécurisé
+    restart: unless-stopped
+    # Ajout de sysctls pour optimiser le réseau
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.forwarding=1
+    # Politique de redémarrage améliorée
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    networks:
+      - openvpn_network # Ajoutez ce réseau
+    depends_on:
+      - adguardhome # Assurez-vous qu'AdGuard Home est prêt avant de démarrer OpenVPN
+  
+networks:
+  openvpn_network:
+    # driver: bridge
+    external: true

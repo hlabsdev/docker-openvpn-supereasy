@@ -46,8 +46,8 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-    # networks:
-    #   - openvpn_network # Ajoutez ce réseau
+    networks:
+      - openvpn_network # Ajoutez ce réseau
     # depends_on:
     #   - adguardhome # Assurez-vous qu'AdGuard Home est prêt avant de démarrer OpenVPN
   

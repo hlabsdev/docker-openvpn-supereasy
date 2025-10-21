@@ -50,3 +50,13 @@ The `.ovpn` files are re-generated every time the container starts. This allows 
 The container can spin up OpenVPN in udp and/or tcp mode. For this just specify the ports. If you don't want either udp or tcp just type `off`.
 
 If both UDP and TCP are turned on, the client files will contain the connection information for both, first UDP and then TCP.
+---
+@From hlabs
+- j'ai ajoute des scripts pour faciliter la gestion des clients notemment
+```
+- deploy_hlabs.sh (Pour redeployer proprement le vpn apres des changements de configs)
+- add_client.sh (Pour ajouter un client sans redemarer le serveur)
+- remove_client.sh (Pour supprimer un client sans redemarer le serveur)
+- vpn_manager.sh (Gestoion pousse)
+- openvpn_commands.sh (Gestion)
+```
